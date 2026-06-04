@@ -3,7 +3,7 @@
 
 const CONSTANTS = {
   // Timers (seconds)
-  DRAW_TIME: 60,
+  DRAW_TIME: 30,
   COLOR_SETUP_TIME: 5,   // seconds of no-shake to confirm color
 
   // Rounds
