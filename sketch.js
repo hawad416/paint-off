@@ -2,12 +2,14 @@
 
 function preload() {
   preloadAttractImages()
+  preloadPromptImages()
 }
 
 function setup() {
   createCanvas(windowWidth, windowHeight)
   frameRate(60)
   initCanvases()
+  initDrawingScreen()
   initSpeechInput()
   initMediaPipe()
   initBluetooth()
@@ -38,13 +40,28 @@ function windowResized() {
 function keyPressed() {
   const k = key.toLowerCase()
 
-  // DEV screen jump
+  // DEV screen jumps
   if (window.DEV_MODE) {
-    const screenMap = { 'q':'ATTRACT','w':'COLOR_SETUP','e':'PROMPT_INPUT','r':'DRAWING','t':'VOTING','y':'END' }
-    if (screenMap[k]) { goToScreen(screenMap[k]); return }
+    const screenMap = {
+      'q':'ATTRACT', 'w':'COLOR_SETUP', 'e':'PROMPT_INPUT',
+      'r':'DRAWING', 't':'VOTING', 'y':'END'
+    }
+    if (screenMap[k]) {
+      goToScreen(screenMap[k])
+      if (screenMap[k] === 'DRAWING') startDrawRound()
+      if (screenMap[k] === 'PROMPT_INPUT') resetPromptInput()
+      if (screenMap[k] === 'VOTING') resetVoting()
+      if (screenMap[k] === 'END') resetEndScreen()
+      return
+    }
   }
 
-  // Always delegate to BOTH handlers — screen check is inside each
-  attractKeyPressed(k)
-  colorSetupKeyPressed(k)
+  // Delegate to ONLY the active screen — return after each so keys don't cascade
+  const screen = gameState.screen
+  if (screen === 'ATTRACT')      { attractKeyPressed(k);     return }
+  if (screen === 'COLOR_SETUP')  { colorSetupKeyPressed(k);  return }
+  if (screen === 'PROMPT_INPUT') { promptKeyPressed(k);      return }
+  if (screen === 'DRAWING')      { drawingKeyPressed(k);     return }
+  if (screen === 'VOTING')       { votingKeyPressed(k);      return }
+  if (screen === 'END')          { endKeyPressed(k);         return }
 }
