@@ -14,73 +14,60 @@ function preloadAttractImages() {
 }
 
 function initAttract() {
-  // Generate static bg splatters once
   bgSplatters = []
   randomSeed(99)
   const cols = ['#E8523A','#2E7FE8','#F5C842','#3DC47E','#C042E8','#FF6B35']
   for (let i = 0; i < 18; i++) {
     bgSplatters.push({
-      x: random(width),
-      y: random(height),
-      r: random(18, 70),
-      col: random(cols),
+      x: random(width), y: random(height),
+      r: random(18, 70), col: random(cols),
       alpha: random(18, 48),
       blobs: Array.from({length: floor(random(4,9))}, () => ({
-        ox: random(-30, 30), oy: random(-30, 30),
-        r: random(8, 28)
+        ox: random(-30,30), oy: random(-30,30), r: random(8,28)
       }))
     })
   }
-  randomSeed()
-
-  // Generate drips
   drips = []
   const dripCols = ['#E8523A','#2E7FE8','#F5C842','#3DC47E']
   for (let i = 0; i < 10; i++) {
     drips.push({
-      x: random(width * 0.05, width * 0.95),
-      y: 0,
-      len: random(40, 160),
-      w: random(4, 12),
-      col: random(dripCols),
-      speed: random(0.3, 1.1),
-      cur: random(0, 80)
+      x: random(width*0.05, width*0.95), y: 0,
+      len: random(40,160), w: random(4,12),
+      col: random(dripCols), speed: random(0.3,1.1),
+      cur: random(0,80)
     })
   }
+  randomSeed()
 }
 
 function attractCanPressed(player) {
   if (attractState === 'idle' && player === 'p1') {
     attractState = 'p1ready'
-    spawnBurst(width * 0.26, height * 0.62, '#E8523A')
+    spawnBurst(width*0.26, height*0.62, '#E8523A')
   } else if (attractState === 'idle' && player === 'p2') {
     attractState = 'p2ready'
-    spawnBurst(width * 0.74, height * 0.62, '#2E7FE8')
+    spawnBurst(width*0.74, height*0.62, '#2E7FE8')
   } else if (attractState === 'p1ready' && player === 'p2') {
     attractState = 'bothwait'
     bothReadyAt = millis()
-    spawnBurst(width * 0.74, height * 0.62, '#2E7FE8')
+    spawnBurst(width*0.74, height*0.62, '#2E7FE8')
   } else if (attractState === 'p2ready' && player === 'p1') {
     attractState = 'bothwait'
     bothReadyAt = millis()
-    spawnBurst(width * 0.26, height * 0.62, '#E8523A')
+    spawnBurst(width*0.26, height*0.62, '#E8523A')
   }
 }
 
 function spawnBurst(x, y, col) {
   for (let i = 0; i < 60; i++) {
     const angle = random(TWO_PI)
-    const speed = random(3, 14)
+    const speed = random(3,14)
     particles.push({
       x, y,
-      vx: cos(angle) * speed,
-      vy: sin(angle) * speed - random(2, 5),
-      col,
-      size: random(6, 26),
-      life: 1.0,
-      decay: random(0.014, 0.028),
-      rot: random(TWO_PI),
-      rotV: random(-0.15, 0.15)
+      vx: cos(angle)*speed, vy: sin(angle)*speed - random(2,5),
+      col, size: random(6,26), life: 1.0,
+      decay: random(0.014,0.028),
+      rot: random(TWO_PI), rotV: random(-0.15,0.15)
     })
   }
 }
@@ -93,13 +80,9 @@ function resetAttract() {
 
 function draw_attract() {
   background(255)
-
   if (bgSplatters.length === 0) initAttract()
 
-  // BG splatters
   drawBgSplatters()
-
-  // Drips from top
   drawDrips()
 
   const canW = width * 0.32
@@ -109,7 +92,6 @@ function draw_attract() {
   const cx = width / 2
   const p1x = cx - spacing
   const p2x = cx + spacing
-
   const hoverP1 = sin(frameCount * 0.04) * 9
   const hoverP2 = sin(frameCount * 0.04 + PI) * 9
 
@@ -121,49 +103,32 @@ function draw_attract() {
     setTimeout(() => { resetAttract(); goToScreen('COLOR_SETUP') }, 1800)
   }
 
-  // Particles
   updateParticles()
 
-  // Title
   drawGraffitiTitle(cx, height * 0.16)
 
-  // Subtitle
   if (attractState === 'idle') drawSubtitle(cx, height * 0.28)
 
-  // Cans
   drawCanImage(p1x, canCenterY + hoverP1, canW, canH, p1ready ? redCan : grayCan, true)
   drawCanImage(p2x, canCenterY + hoverP2, canW, canH, p2ready ? blueCan : grayCan, false)
 
-  // Spray labels
-  if (!p1ready) drawNozzleLabel(p1x, canCenterY + hoverP1, canW, canH, '#E8523A')
-  if (!p2ready) drawNozzleLabel(p2x, canCenterY + hoverP2, canW, canH, '#2E7FE8')
+  // Nozzle tip is approx at top of SVG — 0.44 of canH above center, nudge closer
+  const nozzleOffsetY = 0.42  // closer to actual nozzle
+  if (!p1ready) drawNozzleLabel(p1x, canCenterY + hoverP1, canW, canH, '#E8523A', nozzleOffsetY)
+  if (!p2ready) drawNozzleLabel(p2x, canCenterY + hoverP2, canW, canH, '#2E7FE8', nozzleOffsetY)
 
-  // Player tags
   drawPlayerTag(p1x, canCenterY + canH * 0.57, 'PLAYER 1', p1ready, '#E8523A')
   drawPlayerTag(p2x, canCenterY + canH * 0.57, 'PLAYER 2', p2ready, '#2E7FE8')
 
-  // Both ready
   if (attractState === 'both') {
     fill(255, 255, 255, 230)
     noStroke()
     rect(0, 0, width, height)
-
-    // Bold graffiti-style banner
     const bh = height * 0.28
     const by = height / 2 - bh / 2
-
-    // Shadow block
-    fill(20)
-    noStroke()
-    rect(0, by + 8, width, bh)
-
-    // Coral/blue split
-    fill('#E8523A')
-    rect(0, by, width * 0.5, bh)
-    fill('#2E7FE8')
-    rect(width * 0.5, by, width * 0.5, bh)
-
-    // Yellow outline stroke effect
+    fill(20); noStroke(); rect(0, by+8, width, bh)
+    fill('#E8523A'); rect(0, by, width*0.5, bh)
+    fill('#2E7FE8'); rect(width*0.5, by, width*0.5, bh)
     fill('#F5C842')
     textAlign(CENTER, CENTER)
     textFont('Impact, Arial Black, sans-serif')
@@ -171,11 +136,11 @@ function draw_attract() {
     textSize(width * 0.1)
     for (let dx = -4; dx <= 4; dx += 4) {
       for (let dy = -4; dy <= 4; dy += 4) {
-        text("LET'S GO!", width / 2 + dx, height / 2 + dy)
+        text("LET'S GO!", width/2+dx, height/2+dy)
       }
     }
     fill(255)
-    text("LET'S GO!", width / 2, height / 2)
+    text("LET'S GO!", width/2, height/2)
   }
 }
 
@@ -184,10 +149,8 @@ function drawBgSplatters() {
   for (const s of bgSplatters) {
     const c = color(s.col)
     fill(red(c), green(c), blue(c), s.alpha)
-    ellipse(s.x, s.y, s.r * 2, s.r * 2)
-    for (const b of s.blobs) {
-      ellipse(s.x + b.ox, s.y + b.oy, b.r * 2, b.r * 2)
-    }
+    ellipse(s.x, s.y, s.r*2, s.r*2)
+    for (const b of s.blobs) ellipse(s.x+b.ox, s.y+b.oy, b.r*2, b.r*2)
   }
 }
 
@@ -197,89 +160,95 @@ function drawDrips() {
     d.cur = min(d.cur + d.speed, d.len)
     const c = color(d.col)
     fill(red(c), green(c), blue(c), 80)
-    // Drip body
-    rect(d.x - d.w / 2, d.y, d.w, d.cur, 0, 0, d.w / 2, d.w / 2)
-    // Drip bulb at bottom
-    if (d.cur > 10) {
-      ellipse(d.x, d.y + d.cur, d.w * 1.8, d.w * 2.2)
-    }
+    rect(d.x - d.w/2, d.y, d.w, d.cur, 0, 0, d.w/2, d.w/2)
+    if (d.cur > 10) ellipse(d.x, d.y + d.cur, d.w*1.8, d.w*2.2)
   }
 }
 
 function drawGraffitiTitle(cx, y) {
   push()
-  textFont('Impact, Arial Black, sans-serif')
+  // Use Titan One from Google Fonts — chunky, bold, closest to FNF vibe
+  textFont('Titan One, Impact, sans-serif')
   textStyle(BOLD)
-  textSize(width * 0.1)
+  textSize(width * 0.105)
   textAlign(CENTER, CENTER)
 
-  // Yellow outline (graffiti outline effect)
-  fill('#F5C842')
-  for (let dx = -5; dx <= 5; dx += 5) {
-    for (let dy = -5; dy <= 5; dy += 5) {
-      if (dx === 0 && dy === 0) continue
-      text('paint-off!', cx + dx, y + dy)
-    }
+  // Step 1: thick black outer outline (largest, drawn first)
+  fill(12)
+  noStroke()
+  const offsets = [
+    [-8,-8],[-8,0],[-8,8],
+    [0,-8],          [0,8],
+    [8,-8], [8,0],  [8,8],
+    [-12,0],[12,0],[0,-12],[0,12]
+  ]
+  for (const [dx, dy] of offsets) {
+    text('paint-off!', cx+dx, y+dy)
   }
 
-  // Dark shadow
-  fill(20, 20, 20, 120)
-  text('paint-off!', cx + 5, y + 6)
+  // Step 2: yellow shadow offset (gives depth like FNF)
+  fill('#F5C842')
+  for (const [dx, dy] of [[-5,-5],[-5,5],[5,-5],[5,5]]) {
+    text('paint-off!', cx+dx, y+dy)
+  }
+  fill('#D4A800')
+  text('paint-off!', cx+6, y+7)
 
-  // Main: split coral + blue
-  // Draw coral "paint-" and blue "off!" separately
+  // Step 3: main split color fill
+  // Skew for graffiti lean
+  drawingContext.save()
+  drawingContext.transform(1, 0, -0.1, 1, 0, 0)
   const fullW = textWidth('paint-off!')
   const p1w = textWidth('paint-')
-  const startX = cx - fullW / 2
-
+  const startX = (cx - fullW/2) + y * 0.1
   textAlign(LEFT, CENTER)
   fill('#E8523A')
   text('paint-', startX, y)
   fill('#2E7FE8')
   text('off!', startX + p1w, y)
+  drawingContext.restore()
 
-  // Animated spray arc underline
-  const lineY = y + height * 0.082
+  // Step 4: white inner highlight line (top-left of letters)
+  // Simulate with a small white offset
+  fill(255, 255, 255, 120)
+  drawingContext.save()
+  drawingContext.transform(1, 0, -0.1, 1, 0, 0)
+  textAlign(LEFT, CENTER)
+  text('paint-off!', startX - 2, y - 3)
+  drawingContext.restore()
+
+  // Animated wavy underline — chunky
+  const lineY = y + height * 0.085
   const lineW = fullW
-  const lineStartX = startX
-
+  const lineStartX = cx - lineW/2
   noFill()
-  strokeWeight(4)
-  // coral half
+  strokeWeight(5)
   stroke('#E8523A')
   beginShape()
-  for (let x = lineStartX; x <= lineStartX + lineW / 2; x += 3) {
+  for (let x = lineStartX; x <= lineStartX + lineW/2; x += 3) {
     const t = (x - lineStartX) / lineW
     vertex(x, lineY + sin(t * TWO_PI * 3 + frameCount * 0.07) * 5)
   }
   endShape()
-  // blue half
   stroke('#2E7FE8')
   beginShape()
-  for (let x = lineStartX + lineW / 2; x <= lineStartX + lineW; x += 3) {
+  for (let x = lineStartX + lineW/2; x <= lineStartX + lineW; x += 3) {
     const t = (x - lineStartX) / lineW
     vertex(x, lineY + sin(t * TWO_PI * 3 + frameCount * 0.07) * 5)
   }
   endShape()
-
   pop()
 }
 
 function drawSubtitle(cx, y) {
   push()
-  // Tag-style subtitle — white pill with dark border
   const pillW = width * 0.5
   const pillH = height * 0.058
-  fill(255)
-  stroke(30)
-  strokeWeight(2.5)
-  rect(cx - pillW / 2, y - pillH / 2, pillW, pillH, pillH / 2)
-
-  fill(30)
-  noStroke()
+  fill(255); stroke(30); strokeWeight(2.5)
+  rect(cx - pillW/2, y - pillH/2, pillW, pillH, pillH/2)
+  fill(30); noStroke()
   textAlign(CENTER, CENTER)
   textFont('Impact, Arial Black, sans-serif')
-  textStyle(BOLD)
   textSize(width * 0.017)
   text('GRAB A CAN  ·  SHAKE FOR COLOR  ·  SPRAY TO BEGIN', cx, y)
   pop()
@@ -294,45 +263,41 @@ function drawCanImage(cx, cy, w, h, img, mirrored) {
   pop()
 }
 
-function drawNozzleLabel(canCx, canCy, canW, canH, col) {
+function drawNozzleLabel(canCx, canCy, canW, canH, col, nozzleOffsetY) {
   const nozzleTipX = canCx
-  const nozzleTipY = canCy - canH * 0.44
+  const nozzleTipY = canCy - canH * nozzleOffsetY
 
   const bob = sin(frameCount * 0.055) * 6
   const pillW = width * 0.13
   const pillH = height * 0.065
-  const labelY = nozzleTipY - pillH - height * 0.07 + bob
+  // Bring label much closer — only height * 0.03 gap above nozzle tip
+  const labelY = nozzleTipY - pillH / 2 - height * 0.03 + bob
   const labelX = nozzleTipX
 
-  // Graffiti tag style: white fill, colored thick border, dark shadow
-  fill(20)
-  noStroke()
-  rect(labelX - pillW / 2 + 4, labelY - pillH / 2 + 4, pillW, pillH, pillH / 2)
+  // Shadow
+  fill(20); noStroke()
+  rect(labelX - pillW/2 + 4, labelY - pillH/2 + 4, pillW, pillH, pillH/2)
+  // Pill
+  fill(255); stroke(col); strokeWeight(3)
+  rect(labelX - pillW/2, labelY - pillH/2, pillW, pillH, pillH/2)
 
-  fill(255)
-  stroke(col)
-  strokeWeight(3)
-  rect(labelX - pillW / 2, labelY - pillH / 2, pillW, pillH, pillH / 2)
-
-  fill(col)
-  noStroke()
+  fill(col); noStroke()
   textAlign(CENTER, CENTER)
   textFont('Impact, Arial Black, sans-serif')
   textStyle(BOLD)
   textSize(width * 0.015)
   text('SPRAY TO\nSTART', labelX, labelY)
 
-  stroke(col)
-  strokeWeight(2.5)
-  drawDashedLine(labelX, labelY + pillH / 2 + 4, nozzleTipX, nozzleTipY - 8)
+  // Short dashed line — label is much closer now so line is short
+  stroke(col); strokeWeight(2.5)
+  drawDashedLine(labelX, labelY + pillH/2 + 2, nozzleTipX, nozzleTipY - 4)
 
-  fill(col)
-  noStroke()
+  fill(col); noStroke()
   const ah = 9
   triangle(
     nozzleTipX, nozzleTipY,
-    nozzleTipX - ah * 0.7, nozzleTipY - ah * 1.5,
-    nozzleTipX + ah * 0.7, nozzleTipY - ah * 1.5
+    nozzleTipX - ah*0.7, nozzleTipY - ah*1.5,
+    nozzleTipX + ah*0.7, nozzleTipY - ah*1.5
   )
 }
 
@@ -340,37 +305,20 @@ function drawPlayerTag(x, y, label, ready, col) {
   push()
   const pillW = width * 0.14
   const pillH = height * 0.054
-
   if (ready) {
-    // Solid colored with dark shadow — graffiti stamp feel
-    fill(20)
-    noStroke()
-    rect(x - pillW / 2 + 4, y - pillH / 2 + 4, pillW, pillH, 6)
-    fill(col)
-    noStroke()
-    rect(x - pillW / 2, y - pillH / 2, pillW, pillH, 6)
-    fill(255)
-    textStyle(BOLD)
-    textSize(width * 0.017)
+    fill(20); noStroke(); rect(x - pillW/2+4, y - pillH/2+4, pillW, pillH, 6)
+    fill(col); noStroke(); rect(x - pillW/2, y - pillH/2, pillW, pillH, 6)
+    fill(255); textStyle(BOLD); textSize(width*0.017)
     textFont('Impact, Arial Black, sans-serif')
-    textAlign(CENTER, CENTER)
-    noStroke()
+    textAlign(CENTER, CENTER); noStroke()
     text('READY!', x, y)
   } else {
-    // Outlined tag
-    fill(20)
-    noStroke()
-    rect(x - pillW / 2 + 3, y - pillH / 2 + 3, pillW, pillH, 6)
-    fill(255)
-    stroke(col)
-    strokeWeight(2.5)
-    rect(x - pillW / 2, y - pillH / 2, pillW, pillH, 6)
-    fill(30)
-    noStroke()
+    fill(20); noStroke(); rect(x - pillW/2+3, y - pillH/2+3, pillW, pillH, 6)
+    fill(255); stroke(col); strokeWeight(2.5); rect(x - pillW/2, y - pillH/2, pillW, pillH, 6)
+    fill(30); noStroke()
     textAlign(CENTER, CENTER)
     textFont('Impact, Arial Black, sans-serif')
-    textStyle(BOLD)
-    textSize(width * 0.016)
+    textStyle(BOLD); textSize(width*0.016)
     text(label, x, y)
   }
   pop()
@@ -379,20 +327,17 @@ function drawPlayerTag(x, y, label, ready, col) {
 function updateParticles() {
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i]
-    p.x += p.vx
-    p.y += p.vy
-    p.vy += 0.22
-    p.vx *= 0.97
+    p.x += p.vx; p.y += p.vy
+    p.vy += 0.22; p.vx *= 0.97
     p.life -= p.decay
     if (p.life <= 0) { particles.splice(i, 1); continue }
     const c = color(p.col)
     fill(red(c), green(c), blue(c), p.life * 230)
     noStroke()
     push()
-    translate(p.x, p.y)
-    rotate(p.rot)
+    translate(p.x, p.y); rotate(p.rot)
     p.rot += p.rotV
-    ellipse(0, 0, p.size * p.life * 1.4, p.size * p.life)
+    ellipse(0, 0, p.size*p.life*1.4, p.size*p.life)
     pop()
   }
 }
@@ -403,15 +348,13 @@ function drawDashedLine(x1, y1, x2, y2) {
   const steps = floor(d / dashLen)
   for (let i = 0; i < steps; i += 2) {
     const t1 = i / steps
-    const t2 = min((i + 1) / steps, 1)
-    line(
-      lerp(x1, x2, t1), lerp(y1, y2, t1),
-      lerp(x1, x2, t2), lerp(y1, y2, t2)
-    )
+    const t2 = min((i+1) / steps, 1)
+    line(lerp(x1,x2,t1), lerp(y1,y2,t1), lerp(x1,x2,t2), lerp(y1,y2,t2))
   }
 }
 
-function attractKeyPressed() {
-  if (key === '1') attractCanPressed('p1')
-  if (key === '2') attractCanPressed('p2')
+function attractKeyPressed(k) {
+  if (gameState.screen !== 'ATTRACT') return
+  if (k === '1') attractCanPressed('p1')
+  if (k === '2') attractCanPressed('p2')
 }

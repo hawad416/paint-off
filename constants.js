@@ -18,7 +18,7 @@ const CONSTANTS = {
     '#C45AE0', // purple
     '#E05A7C', // pink
     '#5AE0D8', // teal
-    '#FFFFFF', // white
+    '#111111', // black
   ],
 
   // Canvas

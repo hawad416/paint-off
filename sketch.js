@@ -36,12 +36,15 @@ function windowResized() {
 }
 
 function keyPressed() {
-  // Screen jumping (DEV)
+  const k = key.toLowerCase()
+
+  // DEV screen jump
   if (window.DEV_MODE) {
-    const map = { 'q':'ATTRACT','w':'COLOR_SETUP','e':'PROMPT_INPUT','r':'DRAWING','t':'VOTING','y':'END' }
-    if (map[key]) { goToScreen(map[key]); return }
+    const screenMap = { 'q':'ATTRACT','w':'COLOR_SETUP','e':'PROMPT_INPUT','r':'DRAWING','t':'VOTING','y':'END' }
+    if (screenMap[k]) { goToScreen(screenMap[k]); return }
   }
 
-  // Delegate to current screen
-  if (gameState.screen === 'ATTRACT') attractKeyPressed()
+  // Always delegate to BOTH handlers — screen check is inside each
+  attractKeyPressed(k)
+  colorSetupKeyPressed(k)
 }
