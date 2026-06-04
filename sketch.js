@@ -1,10 +1,8 @@
 // sketch.js
-// Entry point. Runs the state machine. Keep this file small.
 
-// DEV: uncomment to jump to a specific screen for testing
- gameState.screen = 'ATTRACT'
- gameState.currentPrompt = 'A raccoon in a business suit'
- window.DEV_MODE = true
+function preload() {
+  preloadAttractImages()
+}
 
 function setup() {
   createCanvas(windowWidth, windowHeight)
@@ -13,6 +11,10 @@ function setup() {
   initSpeechInput()
   initMediaPipe()
   initBluetooth()
+
+  // DEV
+  gameState.screen = 'ATTRACT'
+  window.DEV_MODE = true
 }
 
 function draw() {
@@ -33,9 +35,13 @@ function windowResized() {
   resizeCanvas(windowWidth, windowHeight)
 }
 
-// DEV: number keys 1-6 jump between screens
 function keyPressed() {
-  if (!window.DEV_MODE) return
-  const map = { '1':'ATTRACT','2':'COLOR_SETUP','3':'PROMPT_INPUT','4':'DRAWING','5':'VOTING','6':'END' }
-  if (map[key]) goToScreen(map[key])
+  // Screen jumping (DEV)
+  if (window.DEV_MODE) {
+    const map = { 'q':'ATTRACT','w':'COLOR_SETUP','e':'PROMPT_INPUT','r':'DRAWING','t':'VOTING','y':'END' }
+    if (map[key]) { goToScreen(map[key]); return }
+  }
+
+  // Delegate to current screen
+  if (gameState.screen === 'ATTRACT') attractKeyPressed()
 }
