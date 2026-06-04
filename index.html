@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>paint-off</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000; overflow: hidden; }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+
+  <!-- p5.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+
+  <!-- Core -->
+  <script src="constants.js"></script>
+  <script src="state.js"></script>
+
+  <!-- Controllers -->
+  <script src="controllers/mediapipe.js"></script>
+  <script src="controllers/bluetooth.js"></script>
+  <script src="controllers/speechInput.js"></script>
+
+  <!-- Drawing engine -->
+  <script src="drawing/canvas.js"></script>
+  <script src="drawing/spray.js"></script>
+
+  <!-- API -->
+  <script src="api/promptGen.js"></script>
+
+  <!-- Screens -->
+  <script src="screens/attract.js"></script>
+  <script src="screens/colorSetup.js"></script>
+  <script src="screens/promptInput.js"></script>
+  <script src="screens/drawing.js"></script>
+  <script src="screens/voting.js"></script>
+  <script src="screens/endScreen.js"></script>
+
+  <!-- Main -->
+  <script src="sketch.js"></script>
+
+</body>
+</html>
