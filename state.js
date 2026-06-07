@@ -26,6 +26,12 @@ const gameState = {
   timer: CONSTANTS.DRAW_TIME,
   timerInterval: null,
 
+  // Bluetooth devices
+  bleDevice: null,
+
+  // BLE rx
+  rxChar: null,
+
   // Spray state (updated by bluetooth.js)
   spraying: { p1: false, p2: false },
 

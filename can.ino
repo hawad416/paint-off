@@ -9,8 +9,11 @@
 #define VIBRO A1
 #define BUTTON A4
 
+#define SHAKE_THRESH 14 // Tune this
 #define VIBRO_LENGTH 100
 #define NUM_LEDS 8
+
+#define CAN_ID 1
 
 // Networking stuff (Nordic UART Service UUIDs)
 #define SERVICE_UUID "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
@@ -27,7 +30,9 @@ Adafruit_ADXL343 accel = Adafruit_ADXL343(12345);
 // Define the array of leds
 CRGB leds[NUM_LEDS] = {0xE07C5A, 0xE0C45A, 0x5AE07C, 0x5A9CE0, 0xC45AE0, 0xE05A7C, 0x5AE0D8, 0x111111};
 
+bool prev_button = false;
 uint32_t t_vibro = 0;
+uint8_t color_index = 0;
 
 // Networking helper
 class ServerCallbacks : public BLEServerCallbacks {
@@ -51,6 +56,9 @@ class RxCallbacks : public BLECharacteristicCallbacks {
       rxValue.trim();
       Serial.print("Received: ");
       Serial.println(rxValue);
+
+      // Only thing receiving so far is the color index
+      color_index = atoi(rxValue);
     }
   }
 };
@@ -103,19 +111,26 @@ void loop() {
   sensors_event_t event;
   accel.getEvent(&event);
 
-  String msg = String(event.acceleration.x) + ","
-               + String(event.acceleration.y) + ","
-               + String(event.acceleration.z) + ","
-               + String(button);
+  if (abs(event.acceleration.z) > SHAKE_THRESH) {
+    pTxCharacteristic->setValue(CAN_ID + " shaken");
+    pTxCharacteristic->notify();
 
-  pTxCharacteristic->setValue(msg);
-  pTxCharacteristic->notify();
+    digitalWrite(VIBRO, HIGH);
+    t_vibro = now;
+  }
 
-  // TODO: add vibro
+  if (!prev_button && button) {
+    pTxCharacteristic->setValue(CAN_ID + " pressed");
+    pTxCharacteristic->notify();
+  } else if (prev_button && !button) {
+    pTxCharacteristic->setValue(CAN_ID + " released");
+    pTxCharacteristic->notify();
+  }
+
   if ((uint32_t)(now - t_vibro) >= VIBRO_LENGTH) {
     digitalWrite(VIBRO, LOW);
   }
 
+  prev_button = button;
   delay(50);
 }
-

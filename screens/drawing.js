@@ -15,6 +15,17 @@ const DRAW_COLORS = {
   p2: () => CONSTANTS.PALETTE[gameState.colorIndex.p2],
 }
 
+// Call from bluetooth.js when a shake is detected
+function drawingShake(player) {
+  if (player === 'p1') {
+    gameState.colorIndex.p1 = (gameState.colorIndex.p1 + 1) % CONSTANTS.PALETTE.length
+    sendBLE(gameState.colorIndex.p1);
+  } else if (player === 'p2') {
+    gameState.colorIndex.p2 = (gameState.colorIndex.p2 + 1) % CONSTANTS.PALETTE.length
+    sendBLE(gameState.colorIndex.p2);
+  }
+}
+
 function initDrawingScreen() {
   drawP1Canvas = document.createElement('canvas')
   drawP2Canvas = document.createElement('canvas')

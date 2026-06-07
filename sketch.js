@@ -21,7 +21,6 @@ function setup() {
 
 function draw() {
   background(0)
-  updateControllers()
 
   switch (gameState.screen) {
     case 'ATTRACT':       draw_attract();      break;
