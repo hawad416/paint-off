@@ -11,7 +11,7 @@ let listeningFor = null  // 'p1' or 'p2'
 let promptGrayCan = null
 let revealTimer = 0
 let loadingStartTime = 0
-const MIN_LOADING_MS = 2200  // always show loading for at least this long
+const MIN_LOADING_MS = 800  // always show loading for at least this long
 
 function preloadPromptImages() {
   promptGrayCan = loadImage('assets/gray-spray-can.svg')
@@ -30,23 +30,56 @@ function resetPromptInput() {
   loadingStartTime = 0
 }
 
-// Called when SPEAK button is held — from bluetooth or DEV key
-function promptSpeakHeld(player) {
-  if (promptState === 'p1speak' && player === 'p1') {
-    listeningFor = 'p1'
-    startListening((word) => {
-      spokenWords.p1 = word
-      listeningFor = null
-      promptState = 'p2speak'
-    })
-  } else if (promptState === 'p2speak' && player === 'p2') {
-    listeningFor = 'p2'
-    startListening((word) => {
-      spokenWords.p2 = word
-      listeningFor = null
-      promptState = 'loading'
-    })
+// Called on SPACEBAR press — context-sensitive
+// toggles mic open/closed for whoever's turn it is
+function promptSpacePressed() {
+  console.log('promptSpacePressed called, state:', promptState, 'listeningFor:', listeningFor)
+  if (promptState === 'p1speak') {
+    if (!listeningFor) {
+      // Open mic for P1
+      listeningFor = 'p1'
+      startListening((word) => {
+        if (listeningFor === 'p1' && word) {
+          spokenWords.p1 = word
+          // Don't auto-advance — wait for second space press to confirm
+        }
+      })
+    } else {
+      // Second press — lock P1's word and move to P2
+      stopListening()
+      setTimeout(() => {
+        if (!spokenWords.p1) spokenWords.p1 = 'something'
+        listeningFor = null
+        promptState = 'p2speak'
+      }, 300)
+    }
   }
+
+  else if (promptState === 'p2speak') {
+    if (!listeningFor) {
+      // Open mic for P2
+      listeningFor = 'p2'
+      startListening((word) => {
+        if (listeningFor === 'p2' && word) {
+          spokenWords.p2 = word
+        }
+      })
+    } else {
+      // Second press — lock P2's word and go to loading
+      stopListening()
+      setTimeout(() => {
+        if (!spokenWords.p2) spokenWords.p2 = 'something'
+        listeningFor = null
+        promptState = 'loading'
+        // loadingStartTime is set by draw_promptInput on next frame
+      }, 300)
+    }
+  }
+}
+
+// Keep for bluetooth compatibility
+function promptSpeakHeld(player) {
+  promptSpacePressed()
 }
 
 async function triggerPromptGeneration() {
@@ -68,6 +101,7 @@ async function triggerPromptGeneration() {
       revealAlpha = 0
     }, remaining)
   } catch (e) {
+    console.error('Prompt generation failed:', e)
     generatedPrompt = 'Draw something wild!'
     gameState.currentPrompt = generatedPrompt
     const elapsed = millis() - loadingStartTime
@@ -83,8 +117,10 @@ async function triggerPromptGeneration() {
 function draw_promptInput() {
   background(248, 246, 240)
 
-  // Trigger generation once when entering loading state (any round)
+  // Trigger generation once — only if loadingStartTime not already set by speech/DEV path
+  console.log('draw_promptInput state:', promptState, 'generatedPrompt:', generatedPrompt, 'loadingStartTime:', loadingStartTime)
   if (promptState === 'loading' && generatedPrompt === '' && loadingStartTime === 0) {
+    console.log('TRIGGERING GENERATION')
     loadingStartTime = millis()
     triggerPromptGeneration()
   }
@@ -106,35 +142,36 @@ function draw_promptInput() {
 function drawSpeakScreen(cx, cy) {
   const isP1turn = promptState === 'p1speak'
   const activeCol = isP1turn ? '#E8523A' : '#2E7FE8'
-  const activePlayer = isP1turn ? 'P1' : 'P2'
+  const activePlayer = isP1turn ? 'PLAYER 1' : 'PLAYER 2'
   const isListening = listeningFor !== null
 
-  // Round label
   drawSmallRoundLabel(cx)
 
-  // Big instruction
-  push()
+  // ── Active player banner ──────────────────────────────
+  const bannerH = height * 0.11
+  noStroke()
+  fill(activeCol)
+  rect(0, height * 0.14, width, bannerH)
+
+  fill(255)
   textAlign(CENTER, CENTER)
   textFont('Impact, Arial Black, sans-serif')
   textStyle(BOLD)
   textSize(width * 0.038)
-  fill(18)
   noStroke()
-  text('SAY YOUR WORD', cx, height * 0.2)
-  pop()
+  if (isListening) {
+    text(`${activePlayer} — SPEAK YOUR WORD!`, cx, height * 0.14 + bannerH / 2)
+  } else if (spokenWords[isP1turn ? 'p1' : 'p2']) {
+    text(`${activePlayer} — PRESS SPACE TO CONFIRM`, cx, height * 0.14 + bannerH / 2)
+  } else {
+    text(`${activePlayer} — PRESS SPACE TO SPEAK`, cx, height * 0.14 + bannerH / 2)
+  }
 
-  // P1 word bubble
-  drawWordBubble(
-    cx - width * 0.22, cy,
-    spokenWords.p1,
-    '#E8523A',
-    'P1',
-    isP1turn && isListening
-  )
+  // ── Word bubbles ──────────────────────────────────────
+  drawWordBubble(cx - width * 0.22, cy, spokenWords.p1, '#E8523A', 'P1', isP1turn && isListening)
 
-  // "+" between them
   push()
-  fill(isP1turn || spokenWords.p1 ? 40 : 180)
+  fill(80)
   textAlign(CENTER, CENTER)
   textFont('Impact, Arial Black, sans-serif')
   textSize(width * 0.05)
@@ -142,44 +179,62 @@ function drawSpeakScreen(cx, cy) {
   text('+', cx, cy)
   pop()
 
-  // P2 word bubble
-  drawWordBubble(
-    cx + width * 0.22, cy,
-    spokenWords.p2,
-    '#2E7FE8',
-    'P2',
-    !isP1turn && isListening
-  )
+  drawWordBubble(cx + width * 0.22, cy, spokenWords.p2, '#2E7FE8', 'P2', !isP1turn && isListening)
 
-  // Bottom instruction
-  const pulse = sin(frameCount * 0.08) * 0.15 + 0.85
-  push()
-  textAlign(CENTER, CENTER)
-  textFont('Impact, Arial Black, sans-serif')
-  textSize(width * 0.02)
-  noStroke()
+  // ── Listening animation ───────────────────────────────
   if (isListening) {
-    fill(activeCol)
-    text(`LISTENING... SPEAK NOW!`, cx, height * 0.82)
-  } else {
-    fill(lerpColor(color(activeCol), color(18), 1 - pulse))
-    text(`${activePlayer} — HOLD SPEAK TO SAY YOUR WORD`, cx, height * 0.82)
-  }
-  pop()
-
-  // Microphone pulse when listening
-  if (isListening) {
-    const micPulse = sin(frameCount * 0.15) * 12
+    const micPulse = sin(frameCount * 0.18) * 14
     noFill()
     stroke(activeCol)
     strokeWeight(3)
-    ellipse(cx, height * 0.72, 60 + micPulse, 60 + micPulse)
-    ellipse(cx, height * 0.72, 90 + micPulse * 1.5, 90 + micPulse * 1.5)
+    ellipse(cx, height * 0.8, 55 + micPulse, 55 + micPulse)
+    ellipse(cx, height * 0.8, 85 + micPulse * 1.4, 85 + micPulse * 1.4)
     fill(activeCol)
     noStroke()
     textAlign(CENTER, CENTER)
-    textSize(width * 0.03)
-    text('🎤', cx, height * 0.72)
+    textSize(width * 0.032)
+    text('🎤', cx, height * 0.8)
+
+    // Live word preview — shows what's being heard
+    const heardWord = spokenWords[isP1turn ? 'p1' : 'p2']
+    if (heardWord) {
+      push()
+      fill(activeCol)
+      noStroke()
+      textFont('Impact, Arial Black, sans-serif')
+      textStyle(BOLD)
+      textSize(width * 0.022)
+      textAlign(CENTER, CENTER)
+      text(`"${heardWord.toUpperCase()}" — PRESS SPACE TO LOCK IN`, cx, height * 0.91)
+      pop()
+    } else {
+      push()
+      const pulse = sin(frameCount * 0.1) * 0.3 + 0.7
+      fill(180 * pulse)
+      noStroke()
+      textFont('Impact, Arial Black, sans-serif')
+      textSize(width * 0.018)
+      textAlign(CENTER, CENTER)
+      text('LISTENING...', cx, height * 0.91)
+      pop()
+    }
+  } else {
+    // Space prompt — pulses
+    const pulse = sin(frameCount * 0.08) * 0.2 + 0.8
+    push()
+    const pillW = width * 0.3
+    const pillH = height * 0.062
+    fill(18, 18, 18, 255 * pulse)
+    noStroke()
+    rect(cx - pillW/2, height * 0.86 - pillH/2, pillW, pillH, pillH/2)
+    fill(255, 255, 255, 255 * pulse)
+    textAlign(CENTER, CENTER)
+    textFont('Impact, Arial Black, sans-serif')
+    textStyle(BOLD)
+    textSize(width * 0.018)
+    noStroke()
+    text('PRESS SPACE', cx, height * 0.86)
+    pop()
   }
 }
 
@@ -406,17 +461,21 @@ function drawSmallRoundLabel(cx) {
 // DEV keys
 function promptKeyPressed(k) {
   if (gameState.screen !== 'PROMPT_INPUT') return
-  // Simulate P1 speak
-  if (k === 'a') {
-    spokenWords.p1 = 'cloud'
-    if (promptState === 'p1speak') promptState = 'p2speak'
-  }
-  // Simulate P2 speak
-  if (k === 's') {
-    spokenWords.p2 = 'raccoon'
-    if (promptState === 'p2speak') {
+
+  // Space/a/s all open the real mic
+  if (k === ' ' || k === 'a' || k === 's') promptSpacePressed()
+
+  // f = fast skip with hardcoded words (to test later screens quickly)
+  if (k === 'f') {
+    if (promptState === 'p1speak') {
+      spokenWords.p1 = 'cloud'
+      listeningFor = null
+      promptState = 'p2speak'
+    } else if (promptState === 'p2speak') {
+      spokenWords.p2 = 'raccoon'
+      listeningFor = null
       promptState = 'loading'
-      triggerPromptGeneration()
+      // loadingStartTime set by draw_promptInput
     }
   }
 }

@@ -1,18 +1,14 @@
-// proxy.js
-// Run this with: node proxy.js
-// Sits between the browser and the Anthropic API to handle CORS.
-// Requires Node.js. Install dependency once with: npm install express
-
 require('dotenv').config()
 const express = require('express')
 const app = express()
 app.use(express.json())
 
-// Replace with your actual Anthropic API key  - MAKE AN ENV VARIABLE OR JUST HARD CODE MY KEY LOL
-// MAKE A .gitignore file and add .env to it so you don't accidentally commit my key
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || ''
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
+if (!ANTHROPIC_API_KEY) {
+  console.error('ERROR: ANTHROPIC_API_KEY not found in .env file')
+  process.exit(1)
+}
 
-// Allow requests from localhost 
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*')
   res.header('Access-Control-Allow-Headers', 'Content-Type')
@@ -21,6 +17,7 @@ app.use((req, res, next) => {
 })
 
 app.post('/claude', async (req, res) => {
+  console.log('Claude request received:', JSON.stringify(req.body).slice(0, 100))
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
