@@ -33,6 +33,22 @@ python3 -m http.server 5500
 ```
 Then open `http://localhost:5500` in Chrome.
 
+OR 
+```bash
+npx serve 
+```
+if you have node installed
+
+
+**Alternative game server — VS Code Live Server**
+Install the "Live Server" extension by Ritwick Dey, right-click `index.html` → "Open with Live Server". Still need Terminal 2 for the proxy.
+
+> The browser will ask for camera permission on load — allow it for MediaPipe to work. Use Chrome — Web Bluetooth and Web Speech API are not supported in Firefox or Safari.
+
+---
+
+
+
 **Terminal 2 — Claude API proxy**
 ```bash
 cd paint-off
@@ -42,12 +58,7 @@ You should see: `Proxy running at http://localhost:3001`
 
 > Both must be running for AI prompt generation to work. If only the game server is running, rounds 2 and 3 will still work (hardcoded prompts) but round 1 AI generation will fail.
 
-**Alternative game server — VS Code Live Server**
-Install the "Live Server" extension by Ritwick Dey, right-click `index.html` → "Open with Live Server". Still need Terminal 2 for the proxy.
 
-> The browser will ask for camera permission on load — allow it for MediaPipe to work. Use Chrome — Web Bluetooth and Web Speech API are not supported in Firefox or Safari.
-
----
 
 ## Keyboard shortcuts (DEV mode)
 
