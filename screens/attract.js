@@ -358,3 +358,7 @@ function attractKeyPressed(k) {
   if (k === '1') attractCanPressed('p1')
   if (k === '2') attractCanPressed('p2')
 }
+
+function mousePressed() {
+  initBluetooth();
+}

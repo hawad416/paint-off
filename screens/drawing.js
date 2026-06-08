@@ -10,6 +10,10 @@ let drawRoundTimer = 0
 let drawTimerInterval = null
 let drawRoundStarted = false
 
+// modified by ble
+let is1Painting = false;
+let is2Painting = false;
+
 const DRAW_COLORS = {
   p1: () => CONSTANTS.PALETTE[gameState.colorIndex.p1],
   p2: () => CONSTANTS.PALETTE[gameState.colorIndex.p2],
@@ -144,9 +148,11 @@ function applyHandDrawingToCanvas() {
       (indexTip.x - thumbTip.x) * width,
       (indexTip.y - thumbTip.y) * height
     )
-    const isPainting = pinchDist > 60 && drawRoundStarted
+    // const isPainting = pinchDist > 60 && drawRoundStarted
 
-    if (isPainting && drawPrevPoints[id]) {
+    if (drawPrevPoints[id]) {
+      if (player === 'p1' && !is1Painting) { return; }
+      if (player === 'p2' && !is2Painting) { return; }
       drawHandSpray(pctx, localX, localY, col)
 
       // Smooth connecting stroke

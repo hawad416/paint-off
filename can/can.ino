@@ -9,11 +9,11 @@
 #define VIBRO A1
 #define BUTTON A4
 
-#define SHAKE_THRESH 14 // Tune this
+#define SHAKE_THRESH 20
 #define VIBRO_LENGTH 100
 #define NUM_LEDS 8
 
-#define CAN_ID 1
+#define CAN_ID 2
 
 // Networking stuff (Nordic UART Service UUIDs)
 #define SERVICE_UUID "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
@@ -58,7 +58,7 @@ class RxCallbacks : public BLECharacteristicCallbacks {
       Serial.println(rxValue);
 
       // Only thing receiving so far is the color index
-      color_index = atoi(rxValue);
+      color_index = atoi(rxValue.c_str());
     }
   }
 };
@@ -100,7 +100,7 @@ void setup() {
   FastLED.setBrightness(5);
   FastLED.show();
 
-  Serial.begin(115200);
+  // Serial.begin(115200);
 
   networkingSetup();
 }
@@ -111,8 +111,14 @@ void loop() {
   sensors_event_t event;
   accel.getEvent(&event);
 
-  if (abs(event.acceleration.z) > SHAKE_THRESH) {
-    pTxCharacteristic->setValue(CAN_ID + " shaken");
+  // Serial.print(String(SHAKE_THRESH) + ",");
+
+  // Serial.println(String(event.acceleration.x));
+  // Serial.print(String(event.acceleration.y) + ",");
+  // Serial.println(String(event.acceleration.z));
+
+  if (event.acceleration.x >= SHAKE_THRESH) {
+    pTxCharacteristic->setValue(String(CAN_ID) + " shaken");
     pTxCharacteristic->notify();
 
     digitalWrite(VIBRO, HIGH);
@@ -120,10 +126,10 @@ void loop() {
   }
 
   if (!prev_button && button) {
-    pTxCharacteristic->setValue(CAN_ID + " pressed");
+    pTxCharacteristic->setValue(String(CAN_ID) + " pressed");
     pTxCharacteristic->notify();
   } else if (prev_button && !button) {
-    pTxCharacteristic->setValue(CAN_ID + " released");
+    pTxCharacteristic->setValue(String(CAN_ID) + " released");
     pTxCharacteristic->notify();
   }
 

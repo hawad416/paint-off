@@ -12,7 +12,8 @@ function setup() {
   initDrawingScreen()
   initSpeechInput()
   initMediaPipe()
-  initBluetooth()
+  // Need user input for this one
+  // initBluetooth()
 
   // DEV
   gameState.screen = 'ATTRACT'
