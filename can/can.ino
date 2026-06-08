@@ -13,7 +13,7 @@
 #define VIBRO_LENGTH 100
 #define NUM_LEDS 8
 
-#define CAN_ID 2
+#define CAN_ID 1
 
 // Networking stuff (Nordic UART Service UUIDs)
 #define SERVICE_UUID "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
@@ -27,8 +27,10 @@ bool deviceConnected = false;
 
 Adafruit_ADXL343 accel = Adafruit_ADXL343(12345);
 
+const CRGB colors[8] = {0xE07C5A, 0xE0C45A, 0x5AE07C, 0x5A9CE0, 0xC45AE0, 0xE05A7C, 0x5AE0D8, 0x111111};
+
 // Define the array of leds
-CRGB leds[NUM_LEDS] = {0xE07C5A, 0xE0C45A, 0x5AE07C, 0x5A9CE0, 0xC45AE0, 0xE05A7C, 0x5AE0D8, 0x111111};
+CRGB leds[NUM_LEDS];
 
 bool prev_button = false;
 uint32_t t_vibro = 0;
@@ -54,11 +56,16 @@ class RxCallbacks : public BLECharacteristicCallbacks {
     String rxValue = pCharacteristic->getValue();
     if (rxValue.length() > 0) {
       rxValue.trim();
+      color_index = atoi(rxValue.c_str());
+
       Serial.print("Received: ");
-      Serial.println(rxValue);
+      Serial.println(color_index);
 
       // Only thing receiving so far is the color index
-      color_index = atoi(rxValue.c_str());
+      for (int i = 0; i < NUM_LEDS; i++) {
+        leds[i] = colors[color_index];
+      }
+      FastLED.show();
     }
   }
 };
@@ -96,11 +103,11 @@ void setup() {
 
   if (!accel.begin()) { while(1); }
 
-  FastLED.addLeds<WS2812,LED_PIN,RGB>(leds,NUM_LEDS);
-  FastLED.setBrightness(5);
+  FastLED.addLeds<WS2812,LED_PIN,GRB>(leds,NUM_LEDS);
+  FastLED.setBrightness(50);
   FastLED.show();
 
-  // Serial.begin(115200);
+  Serial.begin(115200);
 
   networkingSetup();
 }
@@ -116,6 +123,8 @@ void loop() {
   // Serial.println(String(event.acceleration.x));
   // Serial.print(String(event.acceleration.y) + ",");
   // Serial.println(String(event.acceleration.z));
+
+  Serial.println(button);
 
   if (event.acceleration.x >= SHAKE_THRESH) {
     pTxCharacteristic->setValue(String(CAN_ID) + " shaken");

@@ -16,13 +16,12 @@ function colorSetupShake(player) {
     gameState.colorIndex.p1 = (gameState.colorIndex.p1 + 1) % CONSTANTS.PALETTE.length
     p1ShakeAnim = 12  // frames of wobble
 
-    // TODO: figure out dual ble
-    sendBLE(gameState.colorIndex.p1);
+    sendBLE(player, gameState.colorIndex.p1);
   } else if (player === 'p2' && !p2ColorReady) {
     gameState.colorIndex.p2 = (gameState.colorIndex.p2 + 1) % CONSTANTS.PALETTE.length
     p2ShakeAnim = 12
 
-    sendBLE(gameState.colorIndex.p2);
+    sendBLE(player, gameState.colorIndex.p2);
   }
 }
 

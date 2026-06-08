@@ -23,10 +23,10 @@ const DRAW_COLORS = {
 function drawingShake(player) {
   if (player === 'p1') {
     gameState.colorIndex.p1 = (gameState.colorIndex.p1 + 1) % CONSTANTS.PALETTE.length
-    sendBLE(gameState.colorIndex.p1);
+    sendBLE(player, gameState.colorIndex.p1);
   } else if (player === 'p2') {
     gameState.colorIndex.p2 = (gameState.colorIndex.p2 + 1) % CONSTANTS.PALETTE.length
-    sendBLE(gameState.colorIndex.p2);
+    sendBLE(player, gameState.colorIndex.p2);
   }
 }
 
