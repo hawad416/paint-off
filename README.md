@@ -18,7 +18,7 @@ Create a `.env` file in the project root:
 ```
 ANTHROPIC_API_KEY=sk-ant-your-key-here
 ```
-Get a key at https://console.anthropic.com. Never commit this file — it's already in `.gitignore`.
+Get a key at https://console.anthropic.com. Never commit this file,  it's already in `.gitignore`. I TEXTED YALL THE API KEY LOL
 
 ---
 
