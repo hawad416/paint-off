@@ -4,6 +4,14 @@ A multiplayer graffiti drawing game for two strangers. Built with p5.js + MediaP
 
 ---
 
+## Can Code + Hardware Schematic
+
+<img width="371" height="299" alt="Screenshot 2026-06-09 at 3 04 06 PM" src="https://github.com/user-attachments/assets/ccab65e2-b756-4a9c-a640-6e6e11f848fe" />
+<img width="218" height="270" alt="Screenshot 2026-06-09 at 3 04 18 PM" src="https://github.com/user-attachments/assets/26c0fd17-8d32-4507-ae03-15beb82d8ace" />
+
+See ```can/can.ino``` for the ESP32 programming and ```controllers/bluetooth.js``` for web bluetooth connection! 
+
+
 ## Setup (first time only)
 
 **1. Install proxy dependencies**
